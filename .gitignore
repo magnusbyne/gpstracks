@@ -13,4 +13,5 @@ build
 **/.factorypath
 gpx
 out
+bin
 .recommenders
