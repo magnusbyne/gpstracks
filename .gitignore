@@ -1,2 +1,16 @@
 .metadata
 .recommenders
+**/.gradle
+**/build
+**/.DS_Store
+build
+.metadata
+.gwt-log
+**/.classpath
+**/.project
+**/org.eclipse.jdt.core.prefs
+**/org.eclipse.jdt.apt.core.prefs
+**/.factorypath
+gpx
+out
+.recommenders
