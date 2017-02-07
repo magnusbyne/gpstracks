@@ -16,7 +16,12 @@
  */
 package org.mb.gpx;
 
+import java.util.Collection;
+
 import org.joda.time.DateTime;
+import org.joda.time.Period;
+
+import com.hs.gpxparser.modal.Waypoint;
 
 /**
  * Provides a default implementation of the SimpleWaypoint interface. The double
@@ -28,254 +33,52 @@ import org.joda.time.DateTime;
  * expected that BasicWaypoint objects created to represent a waypoint collected
  * with a GPS receiver will have non-null vales for these attributes.
  */
-public class BasicWaypoint extends Waypoint {
+public class WaypointHelper  {
 
-	// Stores the latitude of the BasicWaypoint.
-	private double latitude;
+	private Waypoint waypoint;
 
-	// Stores the longitude of the BasicWaypoint.
-	private double longitude;
-
-	// Stores the elevation of the BasicWaypoint.
-	private double elevation;
-
-	// Stores the time the BasicWaypoint was collected.
-	private DateTime time;
-
-	// Stores the name of the BasicWaypoint. This is not necessarily
-	// an integer or a unique identifier.
-	private String name;
-
-	// Indicates if this BasicWaypoint includes an elevation.
-	private boolean hasElevation;
-
-	// Indicates if this BasicWaypoint includes a collection data and time.
-	private boolean hasTime;
-
-	// Indicates if this BasicWaypoint includes a name.
-	private boolean hasName;
-
-	/**
-	 * Constructs a BasicWaypoint object with the provided latitude and
-	 * longitude.
-	 *
-	 * @param argLatitude
-	 *            - The latitude for the BasicWaypoint object. This must be a
-	 *            valid latitude value as tested by the GpxUtils class.
-	 *
-	 * @param argLongitude
-	 *            The longitude for the BasicWaypoint object. This must be a
-	 *            valid latitude value as tested by the GpxUtils class.
-	 */
-	public static BasicWaypoint makeWaypoint(double argLatitude, double argLongitude) throws IllegalArgumentException {
-		// Latitude must be less than or equal to 90 and
-		// greater than or equal to -90.
-		// Longitude must be less than 180 and greater than
-		// or equal to -180.
-
-		boolean validLatitude = GpxUtils.isValidLatitudeValue(argLatitude);
-		boolean validLongitude = GpxUtils.isValidLongitudeValue(argLongitude);
-
-		if (validLatitude != true) {
-			IllegalArgumentException toThrow1 = new IllegalArgumentException(
-					"The latitude value passed to the BasicWaypoint constructor " + "was not valid.");
-
-			throw toThrow1;
-		}
-
-		if (validLongitude != true) {
-			IllegalArgumentException toThrow1 = new IllegalArgumentException(
-					"The latitude value passed to the BasicWaypoint constructor " + "was not valid.");
-
-			throw toThrow1;
-		}
-
-		BasicWaypoint toReturn = new BasicWaypoint();
-
-		toReturn.latitude = argLatitude;
-		toReturn.longitude = argLongitude;
-
-		return toReturn;
+	WaypointHelper(Waypoint wp) {
+		this.waypoint = wp;
 	}
+    /**
+     * Gets the distance between two points.
+     *
+     * @param other
+     * @return
+     */
+    public double distanceTo(Waypoint other) {
+            return distFrom(waypoint.getLatitude(), waypoint.getLongitude(), other.getLatitude(), other.getLongitude());
+    }
 
-	/**
-	 * Constructs a BasicWaypoint object with the provided latitude, longitude,
-	 * and name.
-	 *
-	 * @param argLatitude
-	 *            - The latitude for the BasicWaypoint object. This must be a
-	 *            valid latitude value as tested by the GpxUtils class.
-	 *
-	 * @param argLongitude
-	 *            The longitude for the BasicWaypoint object. This must be a
-	 *            valid latitude value as tested by the GpxUtils class.
-	 *
-	 * @param argName
-	 *            The name of the waypoint. This name may not be an integer or a
-	 *            unique identifier. Any legal Java String could be a name.
-	 * @return
-	 */
-	public static BasicWaypoint getBasicWaypoint(double argLatitude, double argLongitude, String argName) {
-		BasicWaypoint toReturn = BasicWaypoint.makeWaypoint(argLatitude, argLongitude);
+    public Period timeBetween(Waypoint other) {
+            return new Period(new DateTime(waypoint.getTime()), new DateTime(other.getTime()));
+    }
 
-		toReturn.name = argName;
-		toReturn.hasName = true;
+    public Waypoint getClosest(Collection<Waypoint> points) {
+            Waypoint closest = null;
+            double minDist = Double.MAX_VALUE;
 
-		return toReturn;
-	}
+            for (Waypoint point : points) {
+                    double dist = distanceTo(point);
+                    if (dist < minDist) {
+                            closest = point;
+                            minDist = dist;
+                    }
+            }
+            return closest;
+    }
 
-	/**
-	 * Returns the latitude of this BasicWaypoint object as a double. This
-	 * double is in decimal degrees format.
-	 */
-	@Override
-	public double getLatitude() {
-		return latitude;
-	}
+    private static double distFrom(double lat1, double lng1, double lat2, double lng2) {
+            double earthRadius = 3958.75;
+            double dLat = Math.toRadians(lat2 - lat1);
+            double dLng = Math.toRadians(lng2 - lng1);
+            double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(Math.toRadians(lat1))
+                            * Math.cos(Math.toRadians(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            double dist = earthRadius * c;
 
-	/**
-	 * Sets the latitude of the BasicWaypoint object. This must be a valid
-	 * latitude value as tested by the GpxUtils class.
-	 */
-	@Override
-	public void setLatitude(double argLatitude) {
-		boolean isValid = GpxUtils.isValidLatitudeValue(argLatitude);
+            return dist * 1.609344;
+    }
 
-		if (isValid == true) {
-			this.latitude = argLatitude;
-		}
-
-		else {
-			IllegalArgumentException toThrow = new IllegalArgumentException(
-					"The latitude value passed to the method was not valid.");
-
-			throw toThrow;
-		}
-	}
-
-	/**
-	 * Returns the longitude of this BasicWaypoint object as a double. The
-	 * double is in decimal degrees format.
-	 */
-	@Override
-	public double getLongitude() {
-		return longitude;
-	}
-
-	/**
-	 * Sets the longitude of the BasicWaypoint object. This must be a valid
-	 * longitude value as tested by the GpxUtils class.
-	 */
-	@Override
-	public void setLongitude(double argLongitude) {
-		boolean isValid = GpxUtils.isValidLongitudeValue(argLongitude);
-
-		if (isValid == true) {
-			this.longitude = argLongitude;
-		}
-
-		else {
-			IllegalArgumentException toThrow = new IllegalArgumentException(
-					"The longitude value passed to the method was not valid.");
-
-			throw toThrow;
-		}
-	}
-
-	/**
-	 * Returns the elevation of this BasicWaypoint object. In most cases this
-	 * will be a double representing the elevation above mean sea level in feet.
-	 * This is not guaranteed and will depend on the GPS receiver or client code
-	 * that created the BasicWaypoint object.
-	 */
-	@Override
-	public double getElevation() {
-		if (this.hasElevation == false) {
-			IllegalStateException toThrow = new IllegalStateException(
-					"The SimpleWaypoint does not have a valid " + "elevation property.");
-
-			throw toThrow;
-		}
-
-		return this.elevation;
-	}
-
-	/**
-	 * Sets the elevation of the BasicWaypoint object.
-	 */
-	@Override
-	public void setElevation(double argElevation) {
-		this.elevation = argElevation;
-		this.hasElevation = true;
-	}
-
-	/**
-	 * Returns the Joda DateTime object representing the date and time this
-	 * waypoint object was collected by a GPS receiver.
-	 */
-	@Override
-	public DateTime getDateAndTimeCollected() {
-		if (this.hasTime == false) {
-
-			return new DateTime();
-			// IllegalStateException toThrow = new IllegalStateException(
-			// "The SimpleWaypoint does not have a valid "
-			// + "dateAndTimeCollected property.");
-
-			// throw toThrow;
-		}
-
-		return time;
-	}
-
-	/**
-	 * Sets the DateTime object representing the date and time this waypoint
-	 * object was collected by a GPS receiver.
-	 */
-	@Override
-	public void setDateAndTimeCollected(DateTime argTime) {
-		this.time = argTime;
-		this.hasTime = true;
-	}
-
-	/**
-	 * Returns the name of this BasicWaypoint object. This can be any legal Java
-	 * String object.
-	 */
-	@Override
-	public String getName() {
-		if (this.hasName == false) {
-			IllegalStateException toThrow = new IllegalStateException(
-					"The SimpleWaypoint does not have a valid " + "name property.");
-
-			throw toThrow;
-		}
-
-		return this.name;
-	}
-
-	/**
-	 * Sets the name of this BasicWaypoint object.
-	 */
-	@Override
-	public void setName(String argName) {
-		this.name = argName;
-		this.hasName = true;
-	}
-
-	@Override
-	public boolean hasDateAndTimeCollected() {
-		return this.hasTime;
-	}
-
-	@Override
-	public boolean hasElevation() {
-		return this.hasElevation;
-	}
-
-	@Override
-	public boolean hasName() {
-		return this.hasName;
-	}
 
 }

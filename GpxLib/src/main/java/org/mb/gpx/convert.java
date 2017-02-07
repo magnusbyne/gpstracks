@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.hs.gpxparser.modal.Waypoint;
+
 public class convert {
 
 	/**
@@ -28,16 +30,16 @@ public class convert {
 
 		List<Waypoint> points = new ArrayList<Waypoint>();
 		while (matcher.find()) {
-			points.add(BasicWaypoint.makeWaypoint(
+			points.add(Waypoint.makeWaypoint(
 					Double.parseDouble(matcher.group(2)),
 					Double.parseDouble(matcher.group(1))));
 		}
 
-		List<BasicTrack> tracks = new ArrayList<BasicTrack>();
+		List<Track> tracks = new ArrayList<Track>();
 
 		int start = 0;
 		while (points.size() > start) {
-			tracks.add(BasicTrack.makeTrack(
+			tracks.add(Track.makeTrack(
 					points.subList(start, Math.min(points.size(), start + 500)),
 					getName()));
 			start += 500;

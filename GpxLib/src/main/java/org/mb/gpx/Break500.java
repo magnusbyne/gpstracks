@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hs.gpxparser.modal.Track;
+import com.hs.gpxparser.modal.TrackSegment;
+import com.hs.gpxparser.modal.Waypoint;
+
 /**
  * This is used to break longer tracks into short parts that can fit in
  * a single garmin track
@@ -29,15 +33,15 @@ public class Break500 {
 		List<Waypoint> points = new ArrayList<Waypoint>();
 		for (Track t : itracks) {
 			for (TrackSegment s : t.getTrackSegments()) {
-				points.addAll(s.getTrackPoints());
+				points.addAll(s.getWaypoints());
 			}
 		}
 
-		List<BasicTrack> tracks = new ArrayList<BasicTrack>();
+		List<Track> tracks = new ArrayList<Track>();
 
 		int start = 0;
 		while (points.size() > start) {
-			tracks.add(BasicTrack.makeTrack(points.subList(start, Math.min(points.size(), start + 500)), getName()));
+			tracks.add(Track.makeTrack(points.subList(start, Math.min(points.size(), start + 500)), getName()));
 			start += 500;
 		}
 

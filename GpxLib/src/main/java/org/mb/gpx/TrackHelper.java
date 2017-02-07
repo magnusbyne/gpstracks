@@ -20,95 +20,88 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.joda.time.DateTime;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.hs.gpxparser.modal.Track;
+import com.hs.gpxparser.modal.TrackSegment;
+import com.hs.gpxparser.modal.Waypoint;
+
 /**
  * Provides the default implementation of the Track interface.
  */
-public class BasicTrack extends Track {
+public class TrackHelper {
 	private String name;
-	private final LinkedList<TrackSegment> segments;
-	private boolean hasName;
+	private final Track track;
 
 	/**
 	 * Constructs a BasicTract from the list of TrackSegments provided as an
 	 * argument.
 	 */
-	public BasicTrack(List<? extends TrackSegment> argTrackSegments) {
-		this.segments = new LinkedList<TrackSegment>();
-		this.segments.addAll(argTrackSegments);
+	public TrackHelper(Track track) {
+		this.track = track;
 	}
 
 	/**
 	 * Constructs a BasicTrack from the list of TrackSegments provided as the
 	 * first argument and with the name provided as the second argument.
 	 */
-	public BasicTrack(List<? extends TrackSegment> argTrackSegments,
+	static public Track makeTrack(List<Waypoint> points,
 			String argName) {
-		this.segments = new LinkedList<TrackSegment>();
-		this.segments.addAll(argTrackSegments);
-		this.setName(argName);
-		this.hasName = true;
+		
+		TrackSegment ts = new TrackSegment();
+		ts.setWaypoints(Lists.newArrayList(points));
+		Track t = new Track();
+		t.addTrackSegment(ts);
+		t.setName(argName);
+		return t;
 	}
 
-	/**
-	 * Constructs a BasicTrack from the list of TrackSegments provided as the
-	 * first argument and with the name provided as the second argument.
-	 */
-	static public BasicTrack makeTrack(List<Waypoint> argTrackSegments,
-			String argName) {
-		return new BasicTrack(Collections.singletonList(new BasicTrackSegment(
-				argTrackSegments)), argName);
-
-	}
-
-	/**
-	 * Constructs a BasicTrack with an empty list of TrackSegments.
-	 */
-	public BasicTrack() {
-		this.segments = new LinkedList<TrackSegment>();
-	}
-
-	@Override
 	public String getName() {
-		return name;
+		return track.getName();
 	}
 
-	@Override
 	public void setName(String argName) {
-		this.name = argName;
-		this.hasName = true;
+		track.setName(argName);
 	}
 
 	/**
 	 * Indicates if this BasicTrack has a valid name value.
 	 */
 	public boolean hasName() {
-		return this.hasName;
+		return getName() != null;
 	}
 
-	@Override
 	public int getNumberOfSegments() {
-		return this.segments.size();
+		return track.getTrackSegments().size();
 	}
 
-	@Override
 	public List<TrackSegment> getTrackSegments() {
-		return this.segments;
+		return ImmutableList.copyOf(track.getTrackSegments());
 	}
 
-	@Override
 	public void addTrackSegment(TrackSegment argTrackSegment) {
-		this.segments.add(argTrackSegment);
-
+		track.addTrackSegment(argTrackSegment);
 	}
 
-	@Override
-	public void clearTrackSegments() {
-		this.segments.clear();
+	public Waypoint getHighestPoint() {
+		Waypoint highest = null;
+		for (TrackSegment seg : getTrackSegments()) {
+			for (Waypoint point : seg.getWaypoints()) {
+				if (highest == null ||  point.getElevation() > highest.getElevation())
+					highest = point;
+			}
+		}
+		return highest;
 	}
 
-	@Override
-	public TrackSegment getTrackSegment(int argIndex) {
-		int actualIndex = argIndex - 1;
-		return this.segments.get(actualIndex);
+	public Waypoint getFirst() {
+		return getTrackSegments().get(0).getWaypoints().get(0);
+	}
+
+	public DateTime getDate() {
+		Waypoint first = getFirst();
+		return new DateTime(first.getTime());
 	}
 }
